@@ -1,0 +1,40 @@
+# --- Euler Environment Setup --
+# Using mpicxx wrapper which automatically handles MPI include/lib paths
+CXX = mpicxx
+
+# NetCDF paths from Euler modules
+# # $NETCDF_ROOT is automatically set when you 'module load netcdf-c'
+NC_INC = -I$(NETCDF_C_EULER_ROOT)/include
+NC_LIB = -L$(NETCDF_C_EULER_ROOT)/lib -lnetcdf
+#
+# # Compiler Flags
+# # Note: Removed -mtune=haswell to let Intel optimize for the specific Euler node
+CXXFLAGS = -std=c++0x -O3 -D LINUX64 -D _MPI -D _OMP3 -D _NETCDF -D USE_NETCDF4 \
+	   $(NC_INC) -I./netcdfcpp_Linux -Wno-unused-result
+#
+#            # Linker Flags
+LDFLAGS = $(NC_LIB)
+
+BINPATH = ./
+DISTRO = euler_intel
+VERSIONU = 11-00-10-x86-64-pc-linux-$(DISTRO)
+
+OBJ=abfluss.o cspline.o defltuzr.o etpetr.o expokorr.o gwflow.o interzep.o irrigate.o snow_canopy.o \
+    meteoint.o modefuzr.o parser.o siltingup.o snowmod.o stringp.o surfrout.o teilmod.o unsatzon.o wsstream.o gifreader.o dataassim.o modapuzr.o wasimuzr.o \
+    netcdfhlp.o netcdfcpp_Linux/ncAtt.o netcdfcpp_Linux/ncByte.o netcdfcpp_Linux/ncChar.o netcdfcpp_Linux/ncCheck.o netcdfcpp_Linux/ncCompoundType.o \
+    netcdfcpp_Linux/ncDim.o netcdfcpp_Linux/ncDouble.o netcdfcpp_Linux/ncEnumType.o netcdfcpp_Linux/ncException.o netcdfcpp_Linux/ncFile.o netcdfcpp_Linux/ncFloat.o \
+    netcdfcpp_Linux/ncGroup.o netcdfcpp_Linux/ncGroupAtt.o netcdfcpp_Linux/ncInt.o netcdfcpp_Linux/ncInt64.o netcdfcpp_Linux/ncOpaqueType.o netcdfcpp_Linux/ncShort.o \
+    netcdfcpp_Linux/ncString.o netcdfcpp_Linux/ncType.o netcdfcpp_Linux/ncUbyte.o netcdfcpp_Linux/ncUint.o netcdfcpp_Linux/ncUint64.o netcdfcpp_Linux/ncUshort.o \
+    netcdfcpp_Linux/ncVar.o netcdfcpp_Linux/ncVarAtt.o netcdfcpp_Linux/ncVlenType.o
+
+# Build Rule
+all: wasim-euler-mpi
+
+wasim-euler-mpi: $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(BINPATH)wasim_mpi_$(VERSIONU) $(OBJ) $(LDFLAGS)
+
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+	
+clean:
+	rm -f $(OBJ) $(BINPATH)wasim_mpi_$(VERSIONU)
